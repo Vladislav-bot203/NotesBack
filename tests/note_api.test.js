@@ -10,10 +10,11 @@ const api = supertest(app);
 
 beforeEach(async () => {
   await Note.deleteMany({});
-  let noteObject = new Note(helper.initialNotes[0]);
-  await noteObject.save();
-  noteObject = new Note(helper.initialNotes[1]);
-  await noteObject.save();
+  const noteObjects = helper.initialNotes
+    .map(note => new Note(note));
+
+  const promiseArray = noteObjects.map(note => note.save());
+  await Promise.all(promiseArray);
 });
 
 test.only("notes are returned as json", async () => {
@@ -48,10 +49,11 @@ test.only("a valid note can be added", async () => {
     .expect("Content-Type", /application\/json/);
 
   const notesAtEnd = await helper.notesInDb();
+  console.log("feedback body:", notesAtEnd)
 
-  const contents = notesAtEnd.body.map((n = n.content));
+  const contents = notesAtEnd.map(n => n.content);
 
-  assert(contents.includes("async/await simplifies making async calls"));
+  assert(contents.includes("async/await simplifies making asinc calls"));
 });
 
 test.only("note without content is not added", async () => {
@@ -82,7 +84,7 @@ test.only("a specific note can be viewed", async () => {
 test.only("a note can be deleted", async () => {
   const notesAtStart = await helper.notesInDb();
   const noteToDelete = notesAtStart[0];
-
+  console.log("note to delete", noteToDelete);
   await api.delete(`/api/notes/${noteToDelete.id}`).expect(204);
 
   const notesAtEnd = await helper.notesInDb();
