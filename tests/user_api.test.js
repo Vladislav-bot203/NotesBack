@@ -10,7 +10,7 @@ const helper = require("./test_helper");
 
 const api = supertest(app);
 
-// describe("When there is initially one user in db", () => {
+describe("When there is initially one user in db", () => {
     beforeEach(async () => {
         await User.deleteMany({});
 
@@ -19,7 +19,7 @@ const api = supertest(app);
             username: "root",
             passwordHash,
         })
-        await User.save();
+        await user.save();
     })
 
     test.only("creation succeeds with a fresh username", async () => {
@@ -44,7 +44,7 @@ const api = supertest(app);
         assert(usernames.includes(newUser.username))
     })
 
-    test.only("creation fails with proper statuscode and message if username already taken", async () => {
+    test("creation fails with proper statuscode and message if username already taken", async () => {
         const usersAtStart = await helper.usersInDb();
 
         const newUser = {
@@ -58,12 +58,11 @@ const api = supertest(app);
             .send(newUser)
             .expect(400)
             .expect("Content-Type", /application\/json/);
-
         const usersAtEnd = await helper.usersInDb();
         assert(result.body.error.includes('expected `username` to be unique'));
         assert.strictEqual(usersAtEnd.length, usersAtStart.length);
     })
-// })
+})
 
 after(async () => {
     await mongoose.connection.close();
